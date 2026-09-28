@@ -19,100 +19,30 @@ The Kalman Filter
 
 The Kalman Filter is the core of the simulation proposed in this project. It mathematically weights forecast stability and up-to-date system acquirements, computing the "State Update Equation".
 
-Come mostrato nel documento kalman, il processo per un radar si articola così:   
-kalman
+As an example, consider a radar trying to track a plane.
 
-Stato Predetto (Predicted State):  
-x
-^
-  
-n+1,n
-​
- =F× 
-x
-^
-  
-n,n
-​
- +Gu 
-n
-​
- .   
-kalman
+Predicted State: The system's mathematical estimation of its current state, computed from the previous step before checking the actual sensor. It can be: the aircraft is traveling at constant speed.
 
-L'Equazione di Aggiornamento dello Stato (State Update Equation):
-x
-^
-  
-1,1
-​
- = 
-x
-^
-  
-1,0
-​
- +K 
-1
-​
- (z 
-1
-​
- − 
-x
-^
-  
-1,0
-​
- ).   
-kalman
+Measurement Variance: The level of uncertainty or noise inherent to the sensor's readings. A higher variance means the sensor's signal is heavily disturbed and less reliable. It is a value which depends on the sensor's reliability / sensitivity.  
 
-Il cuore di questa equazione è il Guadagno di Kalman (K 
-1
-​
- ). Nel caso 1D, il Guadagno di Kalman è calcolato come:
+Predicted State Variance: The estimated uncertainty of our mathematical prediction at the current time step. A higher variance means our theoretical model is currently less confident.   
 
-K 
-n
-​
- = 
-p 
-n,n−1
-​
- +r 
-n
-​
- 
-p 
-n,n−1
-​
- 
-​
- 
+Kalman Gain: The dynamic balancing factor (a scalar in 1D, or a matrix in multidimensional cases) that determines how much the new sensor information should change or correct the predicted state. In the most simplified case (when "u_n" is not considered, see 1)), G is a one-column cinematic matrix which contain the expression for acceleration in function of time. G is implemented and calculated when one between the following situations occurs (most common; in 1) the actual matrix is more complex than a single column, since more and more variable must be considered).
 
-   
-DOCX
+ - 1)If radar has access to the aircraft controls, values such as acceleration are certain and reliable (known external inputs to the system ): in the equation, G is multiplied to "u_n" represents "control variable"
+           
+ - 2)Else, variable like unpredicted acceleration or wind are treated as process noise: G is multiplied to its transpose matrix (G^T), and the covariance matrix (Q) is obtained.
+           
+Now, how does it "weight" the two uncertainties (from matrix P, which expresses the doubt of the mathematical model, and R, about system interferences, noise)? It relies on the one with lower covariance.
 
-Dove:
-
-p 
-n,n−1
-​
-  è la varianza dello stato predetto (quanto ci fidiamo del modello teorico).   
-DOCX
-
-r 
-n
-​
-  è la varianza della misurazione (quanto ci fidiamo del sensore).   
-DOCX
+State Update Equation: The definitive formula that produces the most accurate estimation. It updates the predicted state by applying a correction term, effectively blending the stability of the physical mathematical model with the up-to-date but noisy data from the sensor.   
 
 
 Case: 1D
 
 G is a scalar value. For instance, imagine a thermometer. Its noise exists as a sensor noise.   
 
-Case 2/3D
+Case: 2D or 3D
 
 The Kalman gain is given by a matrix.
 
