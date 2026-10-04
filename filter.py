@@ -1,0 +1,100 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+#CLEAN SIGNAL
+t = np.linspace(0, 25, 1500)
+true_angle = np.sin(2*t)
+
+#INTRODUCING GAUSSIAN NOISE
+noise = np.random.normal(0.0, 0.2, 1500)
+signal = noise + true_angle
+
+#COMPLEMENTARY FILTER - DATA
+dt = 0.01
+alpha = 0.98
+comp_angle = np.zeros(1500)
+accel_angle = np.array(signal)
+gyro_omega = np.zeros(1500)
+comp_angle[0] = accel_angle[0]
+B = 0.35       #bias: what the gyroscope reads instead of 0 when the object is still
+mu = 0.1       #noise: micro-vibrations
+
+
+#COMPLEMENTARY FILTER - ALGORITHM CYCLE
+for tau in range(1, 1500):
+    omega_measured = B + mu + (true_angle[tau] - true_angle[tau - 1]) / dt 
+    gyro_omega[tau] = omega_measured
+    comp_angle[tau] = alpha*(comp_angle[tau-1] + (gyro_omega[tau] - B)*dt) + (1-alpha)*(accel_angle[tau])
+
+filter_accuracy = comp_angle - true_angle
+
+#KALMAN FILTER
+R = 0.1          #system noise-variance
+Q = 0.02        #process noise
+x = np.zeros(1500) 
+p = np.zeros(1500)
+x_minus = np.zeros(1500)
+p_minus = np.zeros(1500)
+k_gain = np.zeros(1500)
+
+x[0] = accel_angle[0]
+p[0] = 1.0
+
+#KALMAN FILTER - CYCLE
+for i in range(1, 1500):
+    
+    x_minus[i] = x[i-1]
+    p_minus[i] = p[i-1] + Q
+    
+    k_gain[i] = p_minus[i] / (p_minus[i] + R)
+    x[i] = x_minus[i] + k_gain[i] * (accel_angle[i] - x_minus[i])
+    p[i] = (1 - k_gain[i]) * p_minus[i]
+
+
+#SUBPLOTTING
+fig = plt.figure(figsize=(15, 12))
+
+#Pure Signal
+plt.subplot(3, 2, 1)
+plt.plot(t, true_angle, color="#1f77b4", linewidth=1.5, label='PURE SIGNAL')
+plt.grid(True, alpha=0.3)
+plt.legend(loc='upper right')
+plt.xlabel("t", x=1.0, ha='right', labelpad=-10)
+
+#Gaussian Noise
+plt.subplot(3, 2, 2)
+plt.plot(t, noise, color="#ff7f0e", linewidth=0.8, alpha=0.7, label='GAUSSIAN NOISE')
+plt.grid(True, alpha=0.3)
+plt.legend(loc='upper right')
+plt.xlabel("t", x=1.0, ha='right', labelpad=-10)
+
+#Noisy Signal
+plt.subplot(3, 2, 3)
+plt.plot(t, signal, color="#d62728", linewidth=0.8, alpha=0.8, label='NOISY SIGNAL')
+plt.grid(True, alpha=0.3)
+plt.legend(loc='upper right')
+plt.xlabel("t", x=1.0, ha='right', labelpad=-10)
+
+#Complementary Filter Accuracy
+plt.subplot(3, 2, 4)
+plt.plot(t, filter_accuracy, color="#8c564b", linewidth=1.2, label='COMPLEMENTARY ACCURACY')
+plt.grid(True, alpha=0.3)
+plt.legend(loc='upper right')
+plt.xlabel("t", x=1.0, ha='right', labelpad=-10)
+
+#Complementary Filter Angle
+plt.subplot(3, 2, 5)
+plt.plot(t, comp_angle, color="#2ca02c", linewidth=1.5, label='COMPLEMENTARY ANGLE')
+plt.grid(True, alpha=0.3)
+plt.legend(loc='upper right')
+plt.xlabel("t", x=1.0, ha='right', labelpad=-10)
+
+#Kalman Filter
+plt.subplot(3, 2, 6)
+plt.plot(t, x, color="#9467bd", linewidth=1.5, label='KALMAN FILTER')
+plt.grid(True, alpha=0.3)
+plt.legend(loc='upper right')
+plt.xlabel("t", x=1.0, ha='right', labelpad=-10)
+
+#plt.tight_layout(pad=3.0)
+plt.show()
