@@ -97,8 +97,8 @@ The Kalman gain is given by a matrix.
 
 Note: in more complex systems, where measurement and the state system belong to different physical domains,  the forecast has to be projected in the measurement domain. It is made possible multiplying the predicted state to the H matrix, before subtracting to the actual measurement (z) (if the ratio is 1:1, H is an identity matrix).  
 
-RESULTS
-![Results Sensor Fusion](sensor_fusion_results.png)
+<img width="1920" height="1080" alt="Screenshot (218)" src="https://github.com/user-attachments/assets/6a24ec72-6dea-464a-995d-80533e654571" />
+
 
 ___________________________________________________________________________________________________________________________________________________________________________________
 
