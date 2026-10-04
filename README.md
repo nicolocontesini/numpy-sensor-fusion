@@ -100,6 +100,14 @@ Note: in more complex systems, where measurement and the state system belong to 
 <img width="1920" height="1080" alt="Screenshot (218)" src="https://github.com/user-attachments/assets/6a24ec72-6dea-464a-995d-80533e654571" />
 
 
+
+NOTES TO THE IMAGE
+
+- the closer to 0 the value of "complementary filter accuracy" is, the more accurate is the correction
+
+- in the graph "complementary angle", it is quite evident the offset, which can be more effectively visualized at higher value of "t".
+
+
 ___________________________________________________________________________________________________________________________________________________________________________________
 
 Among everyday applications, a notable one is in inertial navigation systems. The random drift rate of the gyroscope will seriously affect the positioning accuracy of the navigation system. Therefore, the inertial navigation system has strict requirements for the random drift rate of the gyroscope, and generally should reach 0.01°/h or even smaller.
