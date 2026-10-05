@@ -105,7 +105,9 @@ NOTES TO THE IMAGE
 
 - the closer to 0 the value of "complementary filter accuracy" is, the more accurate is the correction
 
-- in the graph "complementary angle", it is quite evident the offset, which can be more effectively visualized at higher value of "t".
+- in the graph "complementary angle", it is quite evident the offset, which can be more effectively visualized at higher value of "t"
+
+- the initial error spike is caused by the filter initialization dynamics, as weighted data integration begins at the second step ("tau" interval)
 
 
 ___________________________________________________________________________________________________________________________________________________________________________________
