@@ -21,6 +21,24 @@ The Theorem states that the sum of a large number of independent random variable
 
 The Complementary Filter
 
+In "filter.py", consider:
+
+dt = the time between 2 measurements (f = 1 / dt)
+
+alpha = the parmeter which "weights" gyroscope and accelerometer measurements.
+
+comp_angle = initially set to a "zeros" (array of 0), it assumes the value computed by the algorithm
+
+accel_angle = np.array(signal): the data from the accelerometer; noise is included. 
+
+gyro_omega: initially set to a "zeros" (array of 0), it assumes the value computed by [ omega_measured = B + mu + (true_angle[tau] - true_angle[tau - 1]) / dt ]. 
+
+comp_angle[0] = accel_angle[0]: the filter HERE
+
+B = 0.35       #bias: what the gyroscope reads instead of 0 when the object is still
+
+mu = 0.1       #noise: micro-vibrations
+
 A complementary filter is a quick and effective method for blending measurements from an accelerometer and a gyroscope to generate an estimate for orientation.
 
 The filter works assigning specific weights to the measurements provided by the two sensors, so as to:
@@ -112,7 +130,7 @@ State Update Equation: The definitive formula that produces the most accurate es
 
 The Kalman gain is given by a matrix.
 
-Note: in more complex systems, where measurement and the state system belong to different physical domains,  the forecast has to be projected in the measurement domain. It is made possible multiplying the predicted state to the H matrix, before subtracting to the actual measurement (z) (if the ratio is 1:1, H is an identity matrix).  
+Note: in more complex systems, where measurement and the state system belong to different physical domains,  the forecast has to be projected in the measurement domain. It is made possible multiplying the predicted state to the H matrix, before subtracting to the actual measurement (z) (else, like in this project, H is an identity matrix).  
 
 
 
