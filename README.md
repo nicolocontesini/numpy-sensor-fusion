@@ -43,7 +43,7 @@ A complementary filter is a quick and effective method for blending measurements
 
 The filter works assigning specific weights to the measurements provided by the two sensors, so as to:
 
--	Smooth spikes measured form the accelerometer
+-	Smooth spikes measured from the accelerometer
   
 -	Reduce the offset caused by the gyroscope drift
 
@@ -141,7 +141,9 @@ NOTES TO THE IMAGE "graph.png" in the repository
 
 - in the graph "complementary angle", it is quite evident the offset, which can be more effectively visualized at higher value of "t"
 
-- the initial error spike is caused by the filter initialization dynamics, as weighted data integration begins at the second step ("tau" interval)
+- the initial error spike in "complementary accuracy" is caused by the filter initialization dynamics, as weighted data integration begins at the second step ("tau" interval)
+
+
 
 
 ___________________________________________________________________________________________________________________________________________________________________________________
