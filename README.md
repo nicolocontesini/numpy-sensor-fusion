@@ -1,43 +1,24 @@
 # numpy-sensor-fusion
-In this repository I will explore the main issue (noises) linked to signal acquirement and prove on a graph the effect of filters (Complementary and Kalman Filter) on these results. Starting from a sinusoidal wave to which an artificial Gaussian noise is applied, the projects proves how the statistic and predictive approach (Kalman) and the computationally inexpensive blending of sensor data (Complementary Filter) can rebuild a steady signal from a disturbed one. The signal is meant to represent the value of a certain angle theta (in the graph expressed in degree) over a "t" seconds interval. For simplicity, I have chosen a 2D case, wher we can im agine a drone flying.
+In this repository I will explore the main issue (noises) linked to signal acquirement and prove on a graph the effect of filters (Complementary and Kalman Filter) on these results. Starting from a sinusoidal wave to which an artificial Gaussian noise is applied, the projects proves how the computationally inexpensive blending of sensor data (Complementary Filter) can rebuild a steady signal from a disturbed one. The signal is meant to represent the value of a certain angle theta (in the graph expressed in degree) over a "t" seconds interval. For simplicity, I have chosen a 2D case, where we can imagine a drone flying.
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 The "noise" idea
 
-No measurement in practical application is totally aligned with a "clean" model of data acquirement. The term "noise" is used to describe these casual variation.   
+No measurement in practical application is totally aligned with a "clean" model of data acquirement. The term "noise" is used to describe these casual variations.   
 
 Note: in our simulation, a Gaussian noise will be injected into a sinusoidal wave. This kind of disturb is a mathematical model widely-used for simulation and tests:
 
 - it closely mimics natural interferences, such as the noise produced by digital sensors or hardware fluctuations.
 
-- being based on a normal distribution, it is highly manageable to study, analyze, and implement in software.
+- since it is based on a normal distribution, it is highly manageable to study, analyze, and implement in software.
 
-- its fluctuactions are simply added to the lean signal, amking it easier to implement algorythm able to eliminate it.
+- its fluctuations are simply added to the lean signal, making it easier to implement algorithm able to eliminate it.
 
-Central Limit Theorem
+- the “Central Limit Theorem” states that the sum of a large number of independent random variables (as in this simulation) tends toward a Gaussian bell-curve distribution
 
-The Theorem states that the sum of a large number of independent random variables tends toward a Gaussian bell-curve distribution. In IMU, since independent noise sources sum up  together, the overall measured noise follows a Gaussian distribution. 
 
 The Complementary Filter
-
-In "filter.py", consider:
-
-dt = the time between 2 measurements (f = 1 / dt)
-
-alpha = the parmeter which "weights" gyroscope and accelerometer measurements.
-
-comp_angle = initially set to a "zeros" (array of 0), it assumes the value computed by the algorithm
-
-accel_angle = np.array(signal): the data from the accelerometer; noise is included. 
-
-gyro_omega: initially set to a "zeros" (array of 0), it assumes the value computed by [ omega_measured = B + mu + (true_angle[tau] - true_angle[tau - 1]) / dt ]. 
-
-comp_angle[0] = accel_angle[0]: the filter HERE
-
-B = 0.35       #bias: what the gyroscope reads instead of 0 when the object is still
-
-mu = 0.1       #noise: micro-vibrations
 
 A complementary filter is a quick and effective method for blending measurements from an accelerometer and a gyroscope to generate an estimate for orientation.
 
@@ -46,41 +27,36 @@ The filter works assigning specific weights to the measurements provided by the 
 -	Smooth spikes measured from the accelerometer
   
 -	Reduce the offset caused by the gyroscope drift
+Before moving on a brief description of the two sensors considered for this simulation, consider the following statement, necessary to understand the conclusion drawn from each experiment.
+In the complementary filter, the value of Bias settles at a constant limit, called B_max, described by the following equation:
+B_max = B[tau] / 1 – exp(-k_drift * t)
+Where k is a constant which expresses how “fast” B(tau) is growing to B_max, t stands for time since the filter started.
+Such specification is necessary because, in absence of this formula, the simulation would have lost the crucial detail of the offset: by simply adding B to the to the true angular velocity value, the growing offset would not be visible, since a graph plotting the measured velocity would only represent “true_speed” simply offset of a value B.
 
 Accelerometer
 
-The sensor estimates the value of theta in a 3D space computing 
-
-theta = arctan((a_x)^2/sqrt((a_y)^2 + (a_z)^2)).
-
-For this analysis, I assume that it is only affected from noises from the drone’s vibrations, and any static bias has been previously calibrated to zero.
+A 3D accelerometer estimates the tilt angles (pitch and roll) by measuring the projections of the gravity vector. For instance, pitch is computed as:
+theta = arctan(a_x / sqrt((a_y)^2 + (a_z)^2))
+where a represents the acceleration measured along each respective axis (x, y, z). 
+However, accelerometers are highly sensitive to high-frequency noise: mechanical vibrations and external forces temporarily add up to the gravity vector, instantly distorting the true angular measurement.
+For this analysis, I assume that the sensor is only affected from noises from the system’s vibrations, and any static bias has been previously calibrated to zero.
 
 Gyroscope
-
+A 3D gyroscope is a sensor which measures the angular rate by applying the theory of the Coriolis effect, which refers to the force of inertia that acts on objects in motion in relation to a rotating frame.
+It is composed of a mass which, when experiences a force, causes a change in the value of capacitance which is then converted into an electrical signal proportional to the angular rate.
 The sensor estimates the value of delta_theta in a 3D space computing
+delta_theta = omega * dt ,
+where omega must not be intended as the real delta_theta / delta_t, since offset (B) and micro-vibrations (mu) occur:
+omega = omega_real + B + mu.
+In my code, I decided to consider a constantly generated Gaussian noise to simulate disturbs such as micro-vibrations :
+omega_measured = true_speed + B + omega_noise.
 
-delta_theta = omega * delta_t , 
+The weight
 
-where omega must not be intended as the real delta_theta / delta_t, since offset occurs:
+The weight ("alpha", in the equation in the code) assigned to raw data is proportional to the level of accuracy expected from each sensor, considering both noise and offset (see above): for short time interval "tau", the algorithm expects higher reliability to the measurement from the gyroscope, since the accelerometer may detect high spikes in the change of pitch over time, due to the noise.
 
-omega = omega_real + B + mu , 
-
-where B stands for drift, and mu for the standard deviation (gaussian noise, mean=0). In the analysis, I will consider both. 
-
-In the world of sensor (digital system, in general), formulas as the one above are used instead of the integration: sensors cannot compute any calculus without a defined delta_t interval. In particular, what I have written above is an example of Forward Euler Method).
-
-The weight ("alpha", in the equation in the code) assigned to raw data is proportional to the level of accuracy expected from each sensor, considering both noise and drift (see above): for short time interval "tau", the algorithm gives more value to the measurement from the gyroscope, since the accelerometer may detect high spikes in the change of velocity over time, due to the noise.
-The filter, though, still cannot solve offset issue over long intervals: the following example is meant to show how the signal tends to drift, even under the effect of the filter (only by applying Kalman filtering technology can the influence of this random interference be greatly reduced).
-Consider alpha = 0.99, and theta_tau = 30° (estimated, not real). At each cycle, the previous value (theta_(tau-1)) is multiplied by 0.99. 
-1)	0.99(30)
-2)	0.99(0.99*30)
-3)	0.99(0.99*0.99*30)
-4)	…
-   
-Within n cycle, theta_tau will be multiplied by 0.99^n (in the example: 30*0.99^3 = 29.1089)
-Technically, the filter “low passes” the accelerometer and “high passes” the gyroscope.
-A visualization of filter accuracy, at given drift and standard deviation for the gyroscope and at randomly generated Gaussian noise, is in the graph below. 
-
+Technically speaking, the filter “low passes” the accelerometer and “high passes” the gyroscope.
+Thanks to these two sources and weights, the filter can counterbalance the tendence to drift of the gyroscope and smooth eventual noise spikes detected from the accelerometer.
 
 The Kalman Filter
 
