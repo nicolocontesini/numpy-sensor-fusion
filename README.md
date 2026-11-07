@@ -58,6 +58,40 @@ The weight ("alpha", in the equation in the code) assigned to raw data is propor
 Technically speaking, the filter “low passes” the accelerometer and “high passes” the gyroscope.
 Thanks to these two sources and weights, the filter can counterbalance the tendence to drift of the gyroscope and smooth eventual noise spikes detected from the accelerometer.
 
+The following section is about the esteem and the comprehension of the filter accuracy, obtained through a mathematical abstraction and analysis. 
+My analysis is based both on the study of variance and graphs for different scenarios, each of them characterized by set weight (alpha), noise (mu/ omega_measured) and drift (B/ B_max).
+So as to provide a simple and clear representation of the filter mechanism, I wrote a program which simulates it
+
+-	Just like the project objective, this simulation is built upon data acquired from a gyro and an accelerometer
+  
+-	Np.random.normal function draws random sample values normally distributed around a certain mean value. To get the most realistic value possible, according to the sensitivity toward vibrations (causes of random spikes in the measurement), I set higher spread for the accelerometer (np.random.normal(3.0, 1)). The specific value and spread (3.0 and 1) means that the moving system actually does not experience any change in heading (3.0 degrees). 
+-	Consequently, the angular speed (degree/second) mean has been set to 0.0.
+  
+-	For clarity and simplicity, a “complementary angle” value is set to 3.00 degree: it corresponds to the first one obtained.
+  
+-	The program computes these values inside the filter equation, and outputs the resulting angle.
+  
+The following report shows the results obtained at different set values (I focused on alpha and drift). 
+Note: alpha, representing the weight assigned to the two sensors, is usually a value that fluctuates between 0.96 and 0.99, causing the “complementary one” going from 0.04 and 0.01 (1-0.96 = 0.04; 1-0.97 = 0.03).
+
+Filter Accuracy Chart
+A graphic oversight for the filter accuracy over time is shown by the results chart: for each "tau", the program computes the difference between the filtered value and the real one (true_angle). 
+
+Variance 
+So as to get a visible report of different results obtained through different B_max and k-drift, I decided to make the program compute the variance for each set of 100 values, where each value correspond to one measurement acquirement from the sensor. 
+The mean value corresponds to true_angle.
+
+As a first take, make reference to the markdown table below
+(not to be intended as a test report)
+| Tau interval | Accelerometer angle (degree) | Gyro omega (degree/s) | Filtered angle |
+| :--- | :--- | :--- | :--- |
+| 1 | 2.12863 | -0.65616 | 2.97614 |
+| 2 | 2.15961 | -1.06365 | 2.94938 |
+| 3 | 2.31481 | -0.47217 | 2.93207 |
+| 4 | 2.61712 | -0.40057 | 2.92184 |
+| 5 | 4.28818 (SPIKE!!) | 0.90776 | 2.95806 |
+
+
 The Kalman Filter
 
 In "filter.py", consider:
