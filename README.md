@@ -70,6 +70,18 @@ So as to provide a simple and clear representation of the filter mechanism, I wr
 -	For clarity and simplicity, a “complementary angle” value is set to 3.00 degree: it corresponds to the first one obtained.
   
 -	The program computes these values inside the filter equation, and outputs the resulting angle.
+
+As a first take, make reference to the markdown table below
+
+(not to be intended as a test report)
+
+| Tau interval | Accelerometer angle (degree) | Gyro omega (degree/s) | Filtered angle |
+| :--- | :--- | :--- | :--- |
+| 1 | 2.12863 | -0.65616 | 2.97614 |
+| 2 | 2.15961 | -1.06365 | 2.94938 |
+| 3 | 2.31481 | -0.47217 | 2.93207 |
+| 4 | 2.61712 | -0.40057 | 2.92184 |
+| 5 | 4.28818 (SPIKE!!) | 0.90776 | 2.95806 |
   
 The following report shows the results obtained at different set values (I focused on alpha and drift). 
 Note: alpha, representing the weight assigned to the two sensors, is usually a value that fluctuates between 0.96 and 0.99, causing the “complementary one” going from 0.04 and 0.01 (1-0.96 = 0.04; 1-0.97 = 0.03).
@@ -81,66 +93,7 @@ Variance
 So as to get a visible report of different results obtained through different B_max and k-drift, I decided to make the program compute the variance for each set of 100 values, where each value correspond to one measurement acquirement from the sensor. 
 The mean value corresponds to true_angle.
 
-As a first take, make reference to the markdown table below
-(not to be intended as a test report)
-| Tau interval | Accelerometer angle (degree) | Gyro omega (degree/s) | Filtered angle |
-| :--- | :--- | :--- | :--- |
-| 1 | 2.12863 | -0.65616 | 2.97614 |
-| 2 | 2.15961 | -1.06365 | 2.94938 |
-| 3 | 2.31481 | -0.47217 | 2.93207 |
-| 4 | 2.61712 | -0.40057 | 2.92184 |
-| 5 | 4.28818 (SPIKE!!) | 0.90776 | 2.95806 |
 
-
-The Kalman Filter
-
-In "filter.py", consider:
-
-x = State Vector: the true underlying variables to estimate ; x_minus is the previous
-
-p = Predicted State Variance: a measure of the estimated accuracy or uncertainty of the state estimate ; p_minus is the previous
-
-k_gain = Kalman Gain: "weights" how much the algorithm should rely more on the physical model or the sensor data.
-
-R = Measurement Variance Mtrix
-
-Q = Process Noise Matrix
-
-x = x_minus + k_gain * (accel_angle - x_minus) = State Update Equation
-
-
-The Kalman Filter is the core of the simulation proposed in this project. It mathematically weights forecast stability and up-to-date system acquirements, computing the "State Update Equation".
-
-NOTE: in the situation analyzed, for simplicity, I assume there is no input (it means that the Filter doesn't include in the computing any input, like plane cockpit command) : G*u_n =0 (see below for complete variable explanation).
-
-As an example, consider a radar trying to track a plane.
-
-Predicted State: The system's mathematical estimation of its current state, computed from the previous step before checking the actual sensor. It can be: the aircraft is traveling at constant speed.
-
-Measurement Variance: The level of uncertainty or noise inherent to the sensor's readings. A higher variance means the sensor's signal is heavily disturbed and less reliable. It is a value which depends on the sensor's reliability / sensitivity.  
-
-Predicted State Variance [p]: the estimated uncertainty of the mathematical prediction at the current time step. A higher variance means the theoretical model is currently less confident.   
-
-Kalman Gain [k_gain]: the dynamic balancing factor (a scalar in 1D, or a matrix in multidimensional cases) that determines how much the new sensor information should change or correct the predicted state. In the most simplified case (when "u_n" is not considered, see 1)), G is a one-column cinematic matrix which contain the expression for acceleration in function of time. G is implemented and calculated when one between the following situations occurs (most common in 1) the actual matrix is more complex than a single column, since more and more variable must be considered).
-
- - 1)If radar has access to the aircraft controls, values such as acceleration are certain and reliable (known external inputs to the system ): in the equation, G is multiplied "u_n" ("control variable").
-           
- - 2)Else, variable like unpredicted acceleration or wind are treated as process noise: [G] is multiplied to its transpose matrix (G^T), and the covariance matrix [Q] is obtained.
-           
-Now, how does it "weight" the two uncertainties (from matrix [p], which expresses the doubt of the mathematical model, and [R], about system interferences, noise)? It relies on the one with lower covariance.
-
-State Update Equation: The definitive formula that produces the most accurate estimation. It updates the predicted state by applying a correction term, effectively blending the stability of the physical mathematical model with the up-to-date but noisy data from the sensor.   
-
-
-1D situation
-
-[G] is a scalar value. For instance, imagine a thermometer. Its noise exists as a sensor noise.   
-
-2D or 3D situation
-
-The Kalman gain is given by a matrix.
-
-Note: in more complex systems, where measurement and the state system belong to different physical domains,  the forecast has to be projected in the measurement domain. It is made possible multiplying the predicted state to the H matrix, before subtracting to the actual measurement (z) (else, like in this project, H is an identity matrix).  
 
 
 
