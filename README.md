@@ -1,5 +1,5 @@
 # numpy-sensor-fusion
-In this repository I will explore the main issue (noises) linked to signal acquirement and prove on a graph the effect of filters (Complementary and Kalman Filter) on these results. Starting from a sinusoidal wave to which an artificial Gaussian noise is applied, the projects proves how the computationally inexpensive blending of sensor data (Complementary Filter) can rebuild a steady signal from a disturbed one. The signal is meant to represent the value of a certain angle theta (in the graph expressed in degree) over a "t" seconds interval. For simplicity, I have chosen a 2D case, where we can imagine a drone flying.
+In this repository I will explore the main issue (noises) linked to signal acquirement and prove on a graph the effect of the Complementary filter on these results. Starting from a sinusoidal wave to which an artificial Gaussian noise is applied, the projects proves how the computationally inexpensive blending of sensor data (Complementary filter) can rebuild a steady signal from a disturbed one. The signal is meant to represent the value of a certain angle theta (in the graph expressed in degree) over a "t" seconds interval. For simplicity, I have chosen a 2D case, where we can imagine a drone flying.
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -29,8 +29,10 @@ The filter works assigning specific weights to the measurements provided by the 
 -	Reduce the offset caused by the gyroscope drift
 Before moving on a brief description of the two sensors considered for this simulation, consider the following statement, necessary to understand the conclusion drawn from each experiment.
 In the complementary filter, the value of Bias settles at a constant limit, called B_max, described by the following equation:
-B_max = B[tau] / 1 – exp(-k_drift * t)
-Where k is a constant which expresses how “fast” B(tau) is growing to B_max, t stands for time since the filter started.
+
+B_max = B[tau] / 1 – exp(-k_drift * t),
+
+where k is a constant which expresses how “fast” B(tau) is growing to B_max, t stands for time since the filter started.
 Such specification is necessary because, in absence of this formula, the simulation would have lost the crucial detail of the offset: by simply adding B to the to the true angular velocity value, the growing offset would not be visible, since a graph plotting the measured velocity would only represent “true_speed” simply offset of a value B.
 
 Accelerometer
@@ -45,9 +47,13 @@ Gyroscope
 A 3D gyroscope is a sensor which measures the angular rate by applying the theory of the Coriolis effect, which refers to the force of inertia that acts on objects in motion in relation to a rotating frame.
 It is composed of a mass which, when experiences a force, causes a change in the value of capacitance which is then converted into an electrical signal proportional to the angular rate.
 The sensor estimates the value of delta_theta in a 3D space computing
+
 delta_theta = omega * dt ,
+
 where omega must not be intended as the real delta_theta / delta_t, since offset (B) and micro-vibrations (mu) occur:
+
 omega = omega_real + B + mu.
+
 In my code, I decided to consider a constantly generated Gaussian noise to simulate disturbs such as micro-vibrations :
 omega_measured = true_speed + B + omega_noise.
 
@@ -57,6 +63,52 @@ The weight ("alpha", in the equation in the code) assigned to raw data is propor
 
 Technically speaking, the filter “low passes” the accelerometer and “high passes” the gyroscope.
 Thanks to these two sources and weights, the filter can counterbalance the tendence to drift of the gyroscope and smooth eventual noise spikes detected from the accelerometer.
+
+The time constant tau
+In a complementary filter, τ (tau) is the time constant that determines the cutoff frequency between the high-pass filter (for the gyroscope) and the low-pass filter (for the accelerometer). It represents the time scale (in seconds) at which the filter transitions from trusting the gyroscope to trusting the accelerometer.For events shorter than τ seconds, the filter relies mostly on the gyroscope to capture fast movements without vibration noise. For timescales longer than τ seconds, the filter relies on the accelerometer to correct for gyroscope drift.
+
+- Increasing τ (e.g., 1.0 s to 5.0 s): Trusts the gyroscope longer and rejects linear acceleration or mechanical vibrations more aggressively. Use a larger τ if your system experiences sustained accelerations (like a fast-moving drone or car) and has a low-drift gyroscope.
+
+- Decreasing τ (e.g., 0.1 s to 0.5 s): Trusts the accelerometer more and corrects gyroscope drift faster. Use a smaller τ if you have a noisy, inexpensive gyroscope that drifts quickly, and your system operates in a relatively    vibration-free environment
+
+```math
+\tau = \frac{\alpha \cdot dt}{1 - \alpha}
+```
+
+The physical quantity also determines the offset angle around which the measurement tends to settle:
+
+```math
+\Delta\theta_{\infty} = \tau \cdot B
+```
+
+
+```math
+\alpha = \frac{\tau f}{\tau f_c + 1}
+```
+
+and 
+
+
+```math
+f_c = \frac{1}{2\pi\tau}
+```
+
+where f_c is the frequency at which the filter starts 
+
+
+The choice of τ depends on the environment the sensor is supposed to be used:
+
+| Phenomenom | Prefers | Reason |
+| :--- | :--- | :--- | 
+| Gyro bias | small τ | bτ = \Delta\theta_{\infty} | 
+| Linear acceleration, bumps | Large τ | Disturbance lasts for a time; the filter averages for τ | 
+| Vibrations | Large τ | Attenuation grows with f X τ | 
+| 4 | 2.61712 | -0.40057 | ?????
+
+Due to the relationship between α and τ, a precise evaluation for τ is necessary. For example, using α = 0.98 at f = 50 Hz gives τ = 0.98 s; at f = 1 kHz it gives 0.049 s, resulting in very different behaviour. 
+
+
+
 
 The following section is about the esteem and the comprehension of the filter accuracy, obtained through a mathematical abstraction and analysis. 
 My analysis is based both on the study of variance and graphs for different scenarios, each of them characterized by set weight (alpha), noise (mu/ omega_measured) and drift (B/ B_max).
@@ -71,7 +123,7 @@ So as to provide a simple and clear representation of the filter mechanism, I wr
   
 -	The program computes these values inside the filter equation, and outputs the resulting angle.
 
-As a first take, make reference to the markdown table below
+As a first take, make reference to the table below
 
 (not to be intended as a test report)
 
@@ -89,8 +141,8 @@ Note: alpha, representing the weight assigned to the two sensors, is usually a v
 Filter Accuracy Chart
 A graphic oversight for the filter accuracy over time is shown by the results chart: for each "tau", the program computes the difference between the filtered value and the real one (true_angle). 
 
-Variance 
-So as to get a visible report of different results obtained through different B_max and k-drift, I decided to make the program compute the variance for each set of 100 values, where each value correspond to one measurement acquirement from the sensor. 
+RMSE 
+So as to get a visible report of different results obtained through different B_max and k-drift, I decided to make the program compute the RMSE (Root Mean Square Error) for each set of 40 values, where each value correspond to one measurement acquirement from the sensor. 
 The mean value corresponds to true_angle.
 
 
